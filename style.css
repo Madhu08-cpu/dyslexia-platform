@@ -1,0 +1,136 @@
+import streamlit as st
+
+
+def run_landing_page():
+    # Page Title
+    st.title("📚 Intelligent Reading & Learning Platform")
+
+    st.write(
+        "An accessible educational platform for reading support, "
+        "vocabulary learning, goals, games, and progress tracking."
+    )
+
+    st.divider()
+
+    # Buttons
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("🚀 Get Started", use_container_width=True):
+            st.session_state["page"] = "Register"
+            st.rerun()
+
+    with col2:
+        if st.button("🔐 Login", use_container_width=True):
+            st.session_state["page"] = "Login"
+            st.rerun()
+
+    st.divider()
+
+    # Platform Overview
+    st.header("📊 Platform Overview")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Learning Tools", "6+")
+
+    with col2:
+        st.metric("Accessibility", "100%")
+
+    with col3:
+        st.metric("User Roles", "3")
+
+    with col4:
+        st.metric("Availability", "24/7")
+
+    st.divider()
+
+    # Features
+    st.header("✨ What Our Platform Offers")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.subheader("📖 Reading Support")
+        st.write(
+            "Improve reading with accessible content, "
+            "font controls and reading assistance."
+        )
+
+    with col2:
+        st.subheader("🎯 Goals & Milestones")
+        st.write(
+            "Create learning goals and monitor progress "
+            "through milestones."
+        )
+
+    with col3:
+        st.subheader("🔊 Text-to-Speech")
+        st.write(
+            "Listen to educational content using "
+            "text-to-speech functionality."
+        )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.subheader("🧠 Vocabulary & Games")
+        st.write(
+            "Save new vocabulary and improve your skills "
+            "with interactive games."
+        )
+
+    with col2:
+        st.subheader("👩‍🏫 Educator Portal")
+        st.write(
+            "Educators and parents can monitor student "
+            "activities and progress."
+        )
+
+    with col3:
+        st.subheader("📈 Reports & Analytics")
+        st.write(
+            "View learning activity, vocabulary growth "
+            "and game performance."
+        )
+
+    st.divider()
+
+    # How It Works
+    st.header("🚀 How It Works")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.subheader("1️⃣ Create Account")
+        st.write(
+            "Register as a student, educator or parent."
+        )
+
+    with col2:
+        st.subheader("2️⃣ Learn")
+        st.write(
+            "Read, listen, practice vocabulary and "
+            "play learning games."
+        )
+
+    with col3:
+        st.subheader("3️⃣ Track Progress")
+        st.write(
+            "Monitor goals, achievements and learning "
+            "progress."
+        )
+
+    st.divider()
+
+    # Footer
+    st.info(
+        "🎓 Department of Artificial Intelligence & "
+        "Machine Learning (AIML) | Academic Year 2026"
+    )
+
+
+# Run the landing page
+if __name__ == "__main__":
+    run_landing_page()
