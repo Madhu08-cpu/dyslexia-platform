@@ -1,103 +1,194 @@
-import streamlit as st
-import pandas as pd
-import os
 import datetime
+import json  # EDIT 1: Imported json module
+import os
+import requests
+import streamlit as st
+import ui
 
-SCHOOLS_FILE = "schools.csv"
-ASSIGNMENTS_FILE = "assignments.csv"
-USERS_FILE = "users.csv"
+# Fallback offline dictionary for instant testing if API is unreachable
+LOCAL_PINCODE_DB = {
+    "641001": {
+        "state": "Tamil Nadu",
+        "district": "Coimbatore",
+        "taluks": [
+            "Coimbatore Central",
+            "Coimbatore Bazaar",
+            "R.S. Puram",
+            "Town Hall",
+        ],
+    },
+    "560001": {
+        "state": "Karnataka",
+        "district": "Bengaluru",
+        "taluks": [
+            "Bangalore G.O.O.",
+            "Vidhana Soudha",
+            "High Court",
+            "Cubbon Park",
+        ],
+    },
+    "400001": {
+        "state": "Maharashtra",
+        "district": "Mumbai",
+        "taluks": ["Mumbai G.P.O.", "Fort", "Stock Exchange"],
+    },
+}
+
+
+# EDIT 2: Helper function to save broadcasted tasks to JSON
+def save_task_to_db(new_task):
+  """Saves a new task to the shared data file."""
+  data = {"tasks": [], "students": []}
+  if os.path.exists("app_data.json"):
+    with open("app_data.json", "r") as f:
+      try:
+        data = json.load(f)
+      except Exception:
+        pass
+
+  data["tasks"].append(new_task)
+
+  with open("app_data.json", "w") as f:
+    json.dump(data, f, indent=4)
+
+
+@st.cache_data(ttl=3600)
+def fetch_location_by_pincode(pincode):
+  """Calls India Post API with browser headers, with local fallback if offline."""
+  url = f"https://api.postalpincode.in/pincode/{pincode}"
+
+  headers = {
+      "User-Agent": (
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          " (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      )
+  }
+
+  try:
+    response = requests.get(url, headers=headers, timeout=5)
+    if response.status_code == 200:
+      data = response.json()
+      if data and data[0].get("Status") == "Success":
+        post_offices = data[0]["PostOffice"]
+        state = post_offices[0]["State"]
+        district = post_offices[0]["District"]
+        taluks = sorted(list({po["Name"] for po in post_offices}))
+        return {
+            "success": True,
+            "state": state,
+            "district": district,
+            "taluks": taluks,
+        }
+  except Exception:
+    pass
+
+  if pincode in LOCAL_PINCODE_DB:
+    return {"success": True, **LOCAL_PINCODE_DB[pincode]}
+
+  return {"success": False}
+
 
 def run_educator_portal():
-    st.title("👩‍🏫 Educator & Parent Portal")
-    st.write("Manage student progress, view detailed analytics, and assign custom reading tasks with deadlines.")
+  ui.render_header(
+      "Educator & Parent Portal",
+      "Search and auto-detect institution details via PIN Code API.",
+      "🏫",
+  )
 
-    current_user = st.session_state.get('user_name', 'Guest')
-    user_role = st.session_state.get('user_role', 'Teacher')
+  # --- PIN CODE INPUT ---
+  ui.render_card_start("⚡ Auto-Detect Location via PIN Code")
 
-    # --- 1. HIERARCHICAL LOCATION & SCHOOL DIRECTORY ---
-    st.subheader("🏫 Institution & Student Directory")
+  pincode_input = st.text_input(
+      "Enter 6-Digit PIN Code (e.g., 560001, 641001, 400001)",
+      max_chars=6,
+      placeholder="Type 6-digit PIN code...",
+  )
 
-    # Load schools data or initialize default structure
-    if os.path.exists(SCHOOLS_FILE):
-        df_schools = pd.read_csv(SCHOOLS_FILE)
-    else:
-        df_schools = pd.DataFrame(columns=["Country", "State", "District", "Taluk", "SchoolName"])
+  # Defaults
+  state_val = "Enter PIN Code First"
+  district_val = "Enter PIN Code First"
+  taluk_options = ["Enter PIN Code First"]
 
-    # Cascading dropdowns: Country -> State -> District -> Taluk -> School
-    countries = df_schools["Country"].unique().tolist() if not df_schools.empty else ["India", "United States"]
-    selected_country = st.selectbox("Select Country", countries)
+  if len(pincode_input) == 6 and pincode_input.isdigit():
+    with st.spinner("Fetching location data..."):
+      result = fetch_location_by_pincode(pincode_input)
+      if result["success"]:
+        state_val = result["state"]
+        district_val = result["district"]
+        taluk_options = result["taluks"]
+        st.success(f"Location loaded for PIN Code {pincode_input}!")
+      else:
+        st.error(
+            "PIN Code not found. Please verify the 6-digit code or enter details"
+            " manually."
+        )
 
-    filtered_states = df_schools[df_schools["Country"] == selected_country]["State"].unique().tolist() if not df_schools.empty else ["Karnataka", "Maharashtra"]
-    selected_state = st.selectbox("Select State / Region", filtered_states)
+  ui.render_card_end()
 
-    filtered_districts = df_schools[(df_schools["Country"] == selected_country) & (df_schools["State"] == selected_state)]["District"].unique().tolist() if not df_schools.empty else ["Bengaluru Urban", "Mysuru"]
-    selected_district = st.selectbox("Select District / City", filtered_districts)
+  st.markdown("<br>", unsafe_allow_html=True)
 
-    filtered_taluks = df_schools[(df_schools["Country"] == selected_country) & (df_schools["State"] == selected_state) & (df_schools["District"] == selected_district)]["Taluk"].unique().tolist() if not df_schools.empty else ["North Taluk", "South Taluk"]
-    selected_taluk = st.selectbox("Select Taluk", filtered_taluks)
+  # --- AUTO-FILLED DETAILS ---
+  ui.render_card_start("🏫 Institution Details")
 
-    filtered_schools = df_schools[(df_schools["Country"] == selected_country) & (df_schools["State"] == selected_state) & (df_schools["District"] == selected_district) & (df_schools["Taluk"] == selected_taluk)]["SchoolName"].unique().tolist() if not df_schools.empty else ["Greenwood High School", "Sunrise Public School"]
-    selected_school = st.selectbox("Select School Name", filtered_schools)
+  col1, col2 = st.columns(2)
 
-    st.divider()
+  with col1:
+    st.text_input("State / Region", value=state_val, disabled=True)
+    selected_taluk = st.selectbox("Select Area / Taluk", taluk_options)
 
-    # --- 2. SELECT PARTICULAR STUDENT FOR PROGRESS ---
-    st.subheader(f"📊 Student Management for: {selected_school}")
+  with col2:
+    st.text_input("District / City", value=district_val, disabled=True)
+    school_name = st.text_input(
+        "School / Institution Name",
+        placeholder="Type school or college name here...",
+    )
 
-    if os.path.exists(USERS_FILE):
-        df_users = pd.read_csv(USERS_FILE)
-        if 'SchoolName' in df_users.columns and 'Role' in df_users.columns:
-            class_students = df_users[(df_users['SchoolName'] == selected_school) & (df_users['Role'] == 'Student')]['Username'].tolist()
-        else:
-            class_students = df_users['Username'].tolist() if 'Username' in df_users.columns else []
-    else:
-        class_students = ["student_alex", "student_maya"]
+  ui.render_card_end()
 
-    if not class_students:
-        st.info("No students registered under this school yet.")
-        return
+  # Active Selection Display
+  if school_name and state_val != "Enter PIN Code First":
+    st.markdown("<br>", unsafe_allow_html=True)
+    ui.render_card_start("🎯 Active Selection Details")
+    st.markdown(
+        f"""
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                <div><span style="color:#94A3B8; font-size:0.8rem; font-weight:700;">STATE</span><br><strong>{state_val}</strong></div>
+                <div><span style="color:#94A3B8; font-size:0.8rem; font-weight:700;">DISTRICT</span><br><strong>{district_val}</strong></div>
+                <div><span style="color:#94A3B8; font-size:0.8rem; font-weight:700;">AREA/TALUK</span><br><strong>{selected_taluk}</strong></div>
+                <div><span style="color:#94A3B8; font-size:0.8rem; font-weight:700;">SCHOOL</span><br><strong style="color:#2563EB;">{school_name}</strong></div>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    ui.render_card_end()
 
-    selected_student = st.selectbox("Select a Particular Student", class_students)
+    # EDIT 3: Added Broadcast Assignment Form at the end of the page
+    st.markdown("<br>", unsafe_allow_html=True)
+    ui.render_card_start("👩‍🏫 Broadcast Reading Assignment")
 
-    if selected_student:
-        st.markdown(f"### 📈 Performance Overview: **{selected_student}**")
+    with st.form("assign_task_form"):
+      task_title = st.text_input("Task Title", "Weekly Comprehension Exercise")
+      target_grade = st.selectbox(
+          "Target Grade",
+          ["Grade 1-3", "Grade 4-6", "Grade 7-9", "Grade 10-12"],
+      )
+      reading_passage = st.text_area(
+          "Passage / Instructions",
+          "Read Chapter 2 and complete the vocabulary quiz.",
+      )
 
-        perf_file = 'student_performance.csv'
-        if os.path.exists(perf_file):
-            df_perf = pd.read_csv(perf_file)
-            if 'Username' in df_perf.columns:
-                student_perf = df_perf[df_perf['Username'].astype(str) == str(selected_student)]
-                st.metric("Total Completed Reading Sessions", len(student_perf))
-                if not student_perf.empty:
-                    st.dataframe(student_perf, use_container_width=True)
-                else:
-                    st.info(f"No reading records found for {selected_student} yet.")
+      if st.form_submit_button("Broadcast Task to Students"):
+        task_data = {
+            "school": school_name.strip(),
+            "state": state_val,
+            "district": district_val,
+            "taluk": selected_taluk,
+            "title": task_title,
+            "grade": target_grade,
+            "passage": reading_passage,
+            "date_created": str(datetime.date.today()),
+        }
+        save_task_to_db(task_data)
+        st.success(f"Task broadcasted to all students at '{school_name}'!")
 
-        st.divider()
-
-        # --- 3. ASSIGN CUSTOM HOMEWORK WITH DEADLINE ---
-        st.subheader(f"📝 Assign Custom Homework to {selected_student}")
-
-        with st.form("assignment_form"):
-            task_title = st.text_input("Assignment Title (e.g., Chapter 1 Practice)")
-            task_content = st.text_area("Custom Reading Passage / Sentences")
-            deadline_date = st.date_input("Complete Within (Due Date)", datetime.date.today() + datetime.timedelta(days=3))
-            
-            assign_submitted = st.form_submit_button("Send Assignment 🚀")
-
-            if assign_submitted:
-                if task_title and task_content:
-                    new_assignment = pd.DataFrame({
-                        'Student': [selected_student],
-                        'AssignedBy': [current_user],
-                        'Title': [task_title],
-                        'Content': [task_content],
-                        'DueDate': [str(deadline_date)],
-                        'Status': ['Pending']
-                    })
-                    
-                    assign_file_exists = os.path.exists(ASSIGNMENTS_FILE)
-                    new_assignment.to_csv(ASSIGNMENTS_FILE, mode='a', header=not assign_file_exists, index=False)
-                    st.success(f"Successfully assigned '{task_title}' to **{selected_student}**, due by **{deadline_date}**!")
-                else:
-                    st.error("Please fill in both the title and the passage content.")
+    ui.render_card_end()

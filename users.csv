@@ -1,3 +1,3 @@
-Name,Password,Age,Phone,Gender,DOB,Address,Streak,Last_Read_Date
-chinnu,f7eaab9a0342cc45c2b08941301b669be05669de3ed61ead82ded7ba6d542ca7,25,6361364342,Female,2001-09-14,sanklipur,2,2026-10-03
-Soujanya Pawar,abf2d51e22f389a76bc30df1928b055a8ef5661c68923d3e8e091b64429b715f,21,9480128074,Female,2005-03-28,"Kasabagalli, Haliyal",1,2026-10-02
+Name,Password,Role,Age,Phone,Gender,DOB,Address,Streak,Last_Read_Date
+ABCD,9f76a06c1343d99947c4bbfa3367d732338d5da9f68d138cf0f434d9fc4d67d1,Teacher / Educator,26,9876543210,Female,2000-01-01,,0,
+madhu,f3bfa498f08b02b33ecead340ab391574ef3474fb759f463e18454f08e25a5ab,Student / Parent,22,7483017680,Female,2005-08-05,kalginakoppa,1,2026-10-04

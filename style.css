@@ -1,136 +1,177 @@
-import streamlit as st
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
+/* --- COLOR VARIABLES & DESIGN TOKENS --- */
+:root {
+    --bg-primary: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --sidebar-bg: #0F172A;
+    --sidebar-border: #1E293B;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --primary-blue: #2563EB;
+    --primary-blue-hover: #1D4ED8;
+    --accent-glow: rgba(37, 99, 235, 0.12);
+    --border-subtle: #E2E8F0;
+    --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+}
 
-def run_landing_page():
-    # Page Title
-    st.title("📚 Intelligent Reading & Learning Platform")
+/* --- GLOBAL APP CONFIG --- */
+html, body, [class*="css"] {
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
 
-    st.write(
-        "An accessible educational platform for reading support, "
-        "vocabulary learning, goals, games, and progress tracking."
-    )
+.stApp {
+    background-color: var(--bg-primary) !important;
+}
 
-    st.divider()
+.block-container {
+    padding-top: 2.5rem !important;
+    padding-bottom: 4rem !important;
+    max-width: 1120px !important;
+}
 
-    # Buttons
-    col1, col2 = st.columns(2)
+header[data-testid="stHeader"] { background-color: transparent !important; }
+footer { visibility: hidden; }
 
-    with col1:
-        if st.button("🚀 Get Started", use_container_width=True):
-            st.session_state["page"] = "Register"
-            st.rerun()
+/* --- SIDEBAR DESIGN --- */
+[data-testid="stSidebar"] {
+    background-color: var(--sidebar-bg) !important;
+    border-right: 1px solid var(--sidebar-border) !important;
+}
 
-    with col2:
-        if st.button("🔐 Login", use_container_width=True):
-            st.session_state["page"] = "Login"
-            st.rerun()
+[data-testid="stSidebar"] * {
+    color: #F8FAFC !important;
+}
 
-    st.divider()
+[data-testid="stSidebar"] div[role="radiogroup"] > label {
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 4px !important;
+    transition: all 0.2s ease !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+}
 
-    # Platform Overview
-    st.header("📊 Platform Overview")
+[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    transform: translateX(3px);
+}
 
-    col1, col2, col3, col4 = st.columns(4)
+/* --- PROFESSIONAL SAAS CARDS --- */
+.saas-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 24px;
+    transition: all 0.25s ease;
+}
 
-    with col1:
-        st.metric("Learning Tools", "6+")
+.saas-card:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08);
+}
 
-    with col2:
-        st.metric("Accessibility", "100%")
+/* Metrics & Stats Widgets */
+.stat-widget {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
-    with col3:
-        st.metric("User Roles", "3")
+.stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
-    with col4:
-        st.metric("Availability", "24/7")
+.stat-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
 
-    st.divider()
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-top: 8px;
+    letter-spacing: -0.5px;
+}
 
-    # Features
-    st.header("✨ What Our Platform Offers")
+.stat-badge {
+    background: #EFF6FF;
+    color: var(--primary-blue);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
 
-    col1, col2, col3 = st.columns(3)
+/* --- FORM INPUTS & FIELD STYLING --- */
+.stTextInput input, 
+.stNumberInput input, 
+.stSelectbox div[data-baseweb="select"], 
+.stTextArea textarea {
+    border-radius: 12px !important;
+    border: 1.5px solid var(--border-subtle) !important;
+    padding: 12px 16px !important;
+    background-color: #FFFFFF !important;
+    color: var(--text-primary) !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease !important;
+}
 
-    with col1:
-        st.subheader("📖 Reading Support")
-        st.write(
-            "Improve reading with accessible content, "
-            "font controls and reading assistance."
-        )
+.stTextInput input:focus, .stTextArea textarea:focus {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 0 4px var(--accent-glow) !important;
+}
 
-    with col2:
-        st.subheader("🎯 Goals & Milestones")
-        st.write(
-            "Create learning goals and monitor progress "
-            "through milestones."
-        )
+/* --- BUTTON GRADIENT & ANIMATION --- */
+div.stButton > button {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-hover) 100%) !important;
+    color: #FFFFFF !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    padding: 12px 24px !important;
+    border: none !important;
+    box-shadow: 0 4px 14px var(--accent-glow) !important;
+    transition: all 0.2s ease !important;
+}
 
-    with col3:
-        st.subheader("🔊 Text-to-Speech")
-        st.write(
-            "Listen to educational content using "
-            "text-to-speech functionality."
-        )
+div.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35) !important;
+}
 
-    col1, col2, col3 = st.columns(3)
+div.stButton > button:active {
+    transform: translateY(0px) !important;
+}
 
-    with col1:
-        st.subheader("🧠 Vocabulary & Games")
-        st.write(
-            "Save new vocabulary and improve your skills "
-            "with interactive games."
-        )
+/* --- TABLE & LIST ROWS --- */
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #F1F5F9;
+}
 
-    with col2:
-        st.subheader("👩‍🏫 Educator Portal")
-        st.write(
-            "Educators and parents can monitor student "
-            "activities and progress."
-        )
+.data-row:last-child {
+    border-bottom: none;
+}
 
-    with col3:
-        st.subheader("📈 Reports & Analytics")
-        st.write(
-            "View learning activity, vocabulary growth "
-            "and game performance."
-        )
-
-    st.divider()
-
-    # How It Works
-    st.header("🚀 How It Works")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.subheader("1️⃣ Create Account")
-        st.write(
-            "Register as a student, educator or parent."
-        )
-
-    with col2:
-        st.subheader("2️⃣ Learn")
-        st.write(
-            "Read, listen, practice vocabulary and "
-            "play learning games."
-        )
-
-    with col3:
-        st.subheader("3️⃣ Track Progress")
-        st.write(
-            "Monitor goals, achievements and learning "
-            "progress."
-        )
-
-    st.divider()
-
-    # Footer
-    st.info(
-        "🎓 Department of Artificial Intelligence & "
-        "Machine Learning (AIML) | Academic Year 2026"
-    )
-
-
-# Run the landing page
-if __name__ == "__main__":
-    run_landing_page()
+.row-label { color: var(--text-secondary); font-weight: 600; font-size: 0.95rem; }
+.row-value { color: var(--text-primary); font-weight: 700; font-size: 0.95rem; }

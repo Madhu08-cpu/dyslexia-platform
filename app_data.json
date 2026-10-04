@@ -1,0 +1,45 @@
+{
+    "tasks": [
+        {
+            "school": "VD HEGADE",
+            "state": "Karnataka",
+            "district": "Uttara Kannada",
+            "taluk": "Haliyal",
+            "title": "Weekly Comprehension Exercise",
+            "grade": "Grade 10-12",
+            "passage": "Read Chapter 2 and complete the vocabulary quiz.",
+            "date_created": "2026-10-04"
+        },
+        {
+            "school": "KLS VDIT",
+            "state": "Karnataka",
+            "district": "Uttara Kannada",
+            "taluk": "Haliyal",
+            "title": "Weekly Comprehension Exercise",
+            "grade": "Grade 1-3",
+            "passage": "Read Chapter 2 and complete the vocabulary quiz.",
+            "date_created": "2026-10-04"
+        },
+        {
+            "school": "KLS VDIT",
+            "state": "Karnataka",
+            "district": "Uttara Kannada",
+            "taluk": "Haliyal",
+            "title": "Weekly Comprehension Exercise",
+            "grade": "Grade 1-3",
+            "passage": "Read Chapter 2 and complete the vocabulary quiz.",
+            "date_created": "2026-10-04"
+        },
+        {
+            "school": "VD HEGADE",
+            "state": "Karnataka",
+            "district": "Uttara Kannada",
+            "taluk": "Haliyal",
+            "title": "Weekly Comprehension Exercise",
+            "grade": "Grade 7-9",
+            "passage": "Read Chapter 2 and complete the vocabulary quiz.",
+            "date_created": "2026-10-04"
+        }
+    ],
+    "students": []
+}

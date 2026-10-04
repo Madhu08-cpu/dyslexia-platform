@@ -14,11 +14,6 @@ from mediapipe.tasks.python import vision
 from gtts import gTTS
 import tempfile
 
-
-# ============================================================
-# 1. EMOTION ENGINE
-# ============================================================
-
 class EmotionEngine:
     def __init__(self):
         self.last_emotions = deque(maxlen=15)
@@ -48,17 +43,7 @@ class EmotionEngine:
             key=self.last_emotions.count
         )
 
-
-# ============================================================
-# 2. FILE CONFIGURATION
-# ============================================================
-
 FILE_NAME = "student_performance.csv"
-
-
-# ============================================================
-# 3. SPEECH INPUT
-# ============================================================
 
 def get_speech_input():
     """
@@ -102,11 +87,6 @@ def get_speech_input():
     except Exception as e:
         return f"Error: {str(e)}"
 
-
-# ============================================================
-# 4. SAVE PERFORMANCE TO CSV
-# ============================================================
-
 def log_to_csv(username, emotion, duration, accuracy):
 
     file_exists = os.path.exists(FILE_NAME)
@@ -137,11 +117,6 @@ def log_to_csv(username, emotion, duration, accuracy):
             f"{accuracy:.2f}"
         ])
 
-
-# ============================================================
-# 5. TEXT-TO-SPEECH
-# ============================================================
-
 def generate_speech(text):
 
     try:
@@ -164,11 +139,6 @@ def generate_speech(text):
         st.error(f"Audio generation failed: {e}")
         return None
 
-
-# ============================================================
-# 6. INITIALIZE SESSION STATE
-# ============================================================
-
 def initialize_session():
 
     if "engine" not in st.session_state:
@@ -185,11 +155,6 @@ def initialize_session():
 
     if "start_time" not in st.session_state:
         st.session_state.start_time = None
-
-
-# ============================================================
-# 7. MAIN APPLICATION
-# ============================================================
 
 def run_app():
 
@@ -212,25 +177,10 @@ def run_app():
         "selected_story",
         "The quick brown fox jumps over the lazy dog."
     )
-
-    # --------------------------------------------------------
-    # MAIN COLUMNS
-    # --------------------------------------------------------
-
     col_ctrl, col_cam = st.columns([1, 2])
-
-    # ========================================================
-    # LEFT SIDE - SESSION CONTROLS
-    # ========================================================
-
     with col_ctrl:
 
         st.subheader("🎛️ Session Controls")
-
-        # ----------------------------------------------------
-        # DYSLEXIA MODE
-        # ----------------------------------------------------
-
         dyslexia_mode = st.checkbox(
             "🔤 Dyslexia-Friendly View",
             value=True
@@ -256,11 +206,6 @@ def run_app():
                 """,
                 unsafe_allow_html=True
             )
-
-        # ----------------------------------------------------
-        # START READING
-        # ----------------------------------------------------
-
         if st.button(
             "▶️ Start Reading",
             use_container_width=True
@@ -279,11 +224,6 @@ def run_app():
             )
 
             st.rerun()
-
-        # ----------------------------------------------------
-        # TEXT TO SPEECH
-        # ----------------------------------------------------
-
         if st.button(
             "🔊 Listen to Target Sentence",
             use_container_width=True
@@ -298,11 +238,6 @@ def run_app():
                     audio_file,
                     format="audio/mp3"
                 )
-
-        # ----------------------------------------------------
-        # FINISH AND SAVE
-        # ----------------------------------------------------
-
         if st.button(
             "⏹️ Finish & Save",
             use_container_width=True
@@ -326,11 +261,6 @@ def run_app():
             )
 
             spoken = get_speech_input()
-
-            # ------------------------------------------------
-            # CALCULATE ACCURACY
-            # ------------------------------------------------
-
             if spoken.startswith("Error:"):
 
                 st.error(spoken)
@@ -347,66 +277,32 @@ def run_app():
                     ).ratio()
                     * 100
                 )
-
-            # ------------------------------------------------
-            # GET EMOTION
-            # ------------------------------------------------
-
             emotion = st.session_state.get(
                 "last_emotion",
                 "NEUTRAL"
             )
-
-            # ------------------------------------------------
-            # SAVE TO CSV
-            # ------------------------------------------------
-
             log_to_csv(
                 current_user,
                 emotion,
                 duration,
                 accuracy
             )
-
-            # ------------------------------------------------
-            # CREATE REPORT
-            # ------------------------------------------------
-
             st.session_state.last_session_report = {
 
                 "story": current_sentence,
-
                 "spoken": spoken,
-
                 "duration": f"{duration:.2f}s",
-
                 "accuracy": f"{accuracy:.2f}%",
-
                 "emotion": emotion
             }
-
             st.session_state.status = "IDLE"
-
             st.session_state.start_time = None
-
             st.rerun()
-
-    # ========================================================
-    # RIGHT SIDE - CAMERA
-    # ========================================================
-
     with col_cam:
-
         if st.session_state.status == "READING":
-
             st.markdown(
                 "### 📖 Please read aloud:"
             )
-
-            # ------------------------------------------------
-            # DISPLAY TARGET SENTENCE
-            # ------------------------------------------------
-
             if dyslexia_mode:
 
                 st.markdown(
@@ -431,102 +327,58 @@ def run_app():
             )
 
             FRAME_WINDOW = st.image([])
-
             cap = cv2.VideoCapture(0)
-
-            # ------------------------------------------------
-            # CHECK CAMERA
-            # ------------------------------------------------
-
             if not cap.isOpened():
-
                 st.error(
                     "❌ Could not open camera. "
                     "Please check your webcam."
                 )
-
                 st.session_state.status = "IDLE"
-
                 return
-
-            # ------------------------------------------------
-            # MEDIAPIPE MODEL
-            # ------------------------------------------------
-
             model_path = os.path.join(
                 os.getcwd(),
                 "face_landmarker.task"
             )
-
             if not os.path.exists(model_path):
-
                 st.error(
                     "❌ Error: 'face_landmarker.task' "
                     "file is missing from the project directory."
                 )
-
                 cap.release()
-
                 st.session_state.status = "IDLE"
-
                 return
-
             base_options = python.BaseOptions(
                 model_asset_path=model_path
             )
-
             options = vision.FaceLandmarkerOptions(
                 base_options=base_options,
                 running_mode=vision.RunningMode.VIDEO,
                 num_faces=1
             )
-
-            # ------------------------------------------------
-            # CREATE LANDMARKER
-            # ------------------------------------------------
-
             try:
-
                 with vision.FaceLandmarker.create_from_options(
                     options
                 ) as landmarker:
-
                     previous_timestamp = 0
-
                     while (
                         st.session_state.status
                         == "READING"
                     ):
-
                         ret, frame = cap.read()
-
                         if not ret:
-
                             st.error(
                                 "❌ Failed to grab frame "
                                 "from camera."
                             )
-
                             break
-
-                        # ------------------------------------
-                        # FLIP CAMERA
-                        # ------------------------------------
-
                         frame = cv2.flip(
                             frame,
                             1
                         )
-
-                        # ------------------------------------
-                        # CONVERT BGR TO RGB
-                        # ------------------------------------
-
                         rgb_frame = cv2.cvtColor(
                             frame,
                             cv2.COLOR_BGR2RGB
                         )
-
                         mp_img = mp.Image(
                             image_format=mp.ImageFormat.SRGB,
                             data=rgb_frame
@@ -534,12 +386,10 @@ def run_app():
                         timestamp = int(
                             time.time() * 1000
                         )
-
                         if timestamp <= previous_timestamp:
                             timestamp = (
                                 previous_timestamp + 1
                             )
-
                         previous_timestamp = timestamp
                         results = (
                             landmarker.detect_for_video(
@@ -547,14 +397,11 @@ def run_app():
                                 timestamp
                             )
                         )
-
                         emotion = "NEUTRAL"
                         if results.face_landmarks:
-
                             landmarks = (
                                 results.face_landmarks[0]
                             )
-
                             for lm in landmarks:
 
                                 x = int(
@@ -566,7 +413,6 @@ def run_app():
                                     lm.y
                                     * frame.shape[0]
                                 )
-
                                 cv2.circle(
                                     frame,
                                     (x, y),
@@ -590,7 +436,6 @@ def run_app():
                             (0, 0, 0),
                             -1
                         )
-
                         cv2.putText(
                             frame,
                             f"Emotion: {emotion}",
@@ -607,117 +452,76 @@ def run_app():
                             ),
                             channels="RGB"
                         )
-
                         time.sleep(0.01)
-
             except Exception as e:
-
                 st.error(
                     f"Emotion detection error: {e}"
                 )
-
             finally:
-
                 cap.release()
-
         else:
-
             st.info(
                 "📷 Camera is idle. "
                 "Click **Start Reading** on the left "
                 "to begin your session."
             )
 def display_session_report():
-
     if (
         "last_session_report"
         not in st.session_state
     ):
         return
-
     report = (
         st.session_state.last_session_report
     )
-
     if not report:
         return
-
     st.divider()
-
     st.success(
         "✅ Session Saved Successfully!"
     )
-
     st.subheader(
         "📋 Latest Completed Session Report"
     )
-
     report_df = pd.DataFrame({
-
         "Metric": [
-
             "Target Story Text",
-
             "Detected Speech",
-
             "Duration",
-
             "Accuracy",
-
             "Emotion Detected"
-
         ],
-
         "Value": [
-
             report["story"],
-
             report["spoken"],
-
             report["duration"],
-
             report["accuracy"],
-
             report["emotion"]
-
         ]
-
     })
-
     st.table(report_df)
 
 def display_analytics(current_user):
-
     st.divider()
-
     st.subheader(
         f"📈 Performance History for {current_user}"
     )
-
     if not os.path.exists(FILE_NAME):
-
         st.info(
             "Performance log file has not been "
             "initialized yet."
         )
-
         return
-
     try:
-
         df = pd.read_csv(
             FILE_NAME,
             on_bad_lines="skip"
         )
-
     except Exception as e:
-
         st.error(
             f"Could not read performance file: {e}"
         )
-
         return
-
     required_columns = [
         "Time",
         "Username",
@@ -725,41 +529,31 @@ def display_analytics(current_user):
         "Duration",
         "Accuracy"
     ]
-
     for column in required_columns:
-
         if column not in df.columns:
-
             df[column] = None
-
     df = df[
         df["Username"].astype(str)
         == str(current_user)
     ]
     if not df.empty:
-
         df["Accuracy"] = pd.to_numeric(
             df["Accuracy"],
             errors="coerce"
         )
-
         df["Duration"] = pd.to_numeric(
             df["Duration"],
             errors="coerce"
         )
     if df.empty:
-
         st.info(
             f"No prior records found for "
             f"**{current_user}**. "
             "Complete a session above to build "
             "your individual history!"
         )
-
         return
-
     col_m1, col_m2, col_m3 = st.columns(3)
-
     col_m1.metric(
         label="📚 Total Sessions",
         value=len(df)
@@ -767,44 +561,34 @@ def display_analytics(current_user):
     latest_accuracy = float(
         df.iloc[-1]["Accuracy"]
     )
-
     col_m2.metric(
         label="🎯 Latest Accuracy",
         value=f"{latest_accuracy:.2f}%"
     )
-
     if len(df) > 1:
-
         first_accuracy = float(
             df.iloc[0]["Accuracy"]
         )
-
         improvement = (
             latest_accuracy
             - first_accuracy
         )
-
         col_m3.metric(
             label="📈 Accuracy Improvement",
             value=f"{improvement:+.2f}%",
             delta=f"{improvement:+.2f}%"
         )
-
     else:
-
         col_m3.metric(
             label="📈 Accuracy Improvement",
             value="0.00%"
         )
     if "Accuracy" in df.columns:
-
         chart_df = df.copy()
-
         chart_df["Session"] = range(
             1,
             len(chart_df) + 1
         )
-
         fig = px.line(
             chart_df,
             x="Session",
@@ -819,30 +603,24 @@ def display_analytics(current_user):
                 "Session": "Session Number"
             }
         )
-
         fig.update_yaxes(
             range=[0, 100]
         )
-
         st.plotly_chart(
             fig,
             use_container_width=True
         )
     if "Emotion" in df.columns:
-
         emotion_counts = (
             df["Emotion"]
             .value_counts()
             .reset_index()
         )
-
         emotion_counts.columns = [
             "Emotion",
             "Count"
         ]
-
         if not emotion_counts.empty:
-
             fig_emotion = px.bar(
                 emotion_counts,
                 x="Emotion",
@@ -852,7 +630,6 @@ def display_analytics(current_user):
                     f"History for {current_user}"
                 )
             )
-
             st.plotly_chart(
                 fig_emotion,
                 use_container_width=True
@@ -860,48 +637,33 @@ def display_analytics(current_user):
     st.write(
         "### 📋 Your Past Sessions"
     )
-
     st.dataframe(
         df,
         use_container_width=True
     )
-
     csv_data = df.to_csv(
         index=False
     ).encode("utf-8")
-
     st.download_button(
-
         label="📥 Download Your Personal Report (CSV)",
-
         data=csv_data,
-
         file_name=(
             f"{current_user}"
             "_performance_report.csv"
         ),
-
         mime="text/csv",
-
         use_container_width=True
     )
-
 def main():
-
     initialize_session()
-
     current_user = st.session_state.get(
         "user_name",
         "Guest"
     )
-
     run_app()
-
     display_session_report()
-
     display_analytics(
         current_user
     )
-
 if __name__ == "__main__":
     main()
